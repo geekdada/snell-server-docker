@@ -28,9 +28,13 @@ else
     echo "Using predefined PSK: ${PSK}"
 fi
 
+if [ -z ${PORT} ]; then
+    PORT=9102
+fi
+
 echo "Generating new config..."
-echo "[snell-server]" >> ${CONF}
-echo "listen = :::9102" >> ${CONF}
-echo "psk = ${PSK}" >> ${CONF}
+echo "[snell-server]" >>${CONF}
+echo "listen = :::${PORT}" >>${CONF}
+echo "psk = ${PSK}" >>${CONF}
 
 run_bin

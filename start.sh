@@ -32,6 +32,12 @@ if [ -z ${PORT} ]; then
     PORT=9102
 fi
 
+if [ -z ${IPV6} ]; then
+    IPV6=false
+else
+    echo "Using predefined IPV6: ${IPV6}"
+fi
+
 echo "Generating new config..."
 echo "[snell-server]" >>${CONF}
 echo "listen = :::${PORT}" >>${CONF}

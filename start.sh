@@ -32,6 +32,14 @@ if [ -z ${PORT} ]; then
     PORT=9102
 fi
 
+if [ "${IPV6}" = "true" ]; then
+    listen_addr="::"
+    echo "IPv6 is enabled."
+else
+    listen_addr="0.0.0.0"
+    echo "IPv6 is disabled. Defaulting to IPv4."
+fi
+
 echo "Generating new config..."
 echo "[snell-server]" >>${CONF}
 echo "listen = :::${PORT}" >>${CONF}

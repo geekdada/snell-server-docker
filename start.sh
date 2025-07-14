@@ -32,12 +32,10 @@ if [ -z ${PORT} ]; then
     PORT=9102
 fi
 
-if [ "${IPV6}" = "true" ]; then
-    listen_addr="::"
-    echo "IPv6 is enabled."
+if [ -z ${IPV6} ]; then
+    IPV6=false
 else
-    listen_addr="0.0.0.0"
-    echo "IPv6 is disabled. Defaulting to IPv4."
+    echo "Using predefined IPV6: ${IPV6}"
 fi
 
 echo "Generating new config..."

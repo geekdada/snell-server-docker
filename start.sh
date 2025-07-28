@@ -30,14 +30,11 @@ fi
 
 if [ -z ${PORT} ]; then
     PORT=9102
-    echo "Using default PORT: ${PORT}"
-else
-    echo "Using predefined PORT: ${PORT}"
 fi
 
 echo "Generating new config..."
-echo "[snell-server]" >> ${CONF}
-echo "listen = :::${PORT}" >> ${CONF}
-echo "psk = ${PSK}" >> ${CONF}
+echo "[snell-server]" >>${CONF}
+echo "listen = :::${PORT}" >>${CONF}
+echo "psk = ${PSK}" >>${CONF}
 
 run_bin

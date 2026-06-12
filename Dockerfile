@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:latest AS xx
 
-FROM --platform=$BUILDPLATFORM frolvlad/alpine-glibc:alpine-3.16 AS build
+FROM --platform=$BUILDPLATFORM frolvlad/alpine-glibc:alpine-3.21 AS build
 
 COPY --from=xx / /
 COPY get_url.sh /get_url.sh
@@ -11,7 +11,7 @@ RUN xx-info env && wget -q -O "snell-server.zip" $(/get_url.sh ${VERSION} $(xx-i
     unzip snell-server.zip && rm snell-server.zip && \
     xx-verify /snell-server
 
-FROM frolvlad/alpine-glibc:alpine-3.16
+FROM --platform=$TARGETPLATFORM frolvlad/alpine-glibc:alpine-3.21
 
 ENV TZ=UTC
 

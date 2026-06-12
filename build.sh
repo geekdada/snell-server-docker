@@ -80,32 +80,30 @@ extract_major_version() {
 
 MAJOR_VERSION=$(extract_major_version "$VERSION")
 IMAGE_NAME="geekdada/snell-server"
+PLATFORMS="linux/amd64,linux/arm64"
 
 print_info "开始构建 Docker 镜像..."
 print_info "版本号: $VERSION"
 print_info "发布通道: $CHANNEL"
 print_info "大版本号: $MAJOR_VERSION"
+print_info "目标平台: $PLATFORMS"
 
-# 构建 Docker 镜像
-print_info "正在构建镜像..."
-docker buildx build \
-  --platform linux/amd64 \
-  --build-arg BUILDPLATFORM=linux/amd64 \
-  --build-arg TARGETPLATFORM=linux/amd64 \
-  --build-arg VERSION=${VERSION} \
-  --tag ${IMAGE_NAME}:${VERSION} \
-  .
+if ! docker buildx inspect >/dev/null 2>&1; then
+  print_error "未找到可用的 buildx builder，请先运行: docker buildx create --name snell-builder --driver docker-container --use"
+  exit 1
+fi
 
-print_success "镜像构建完成"
+BUILDER_DRIVER=$(docker buildx inspect --bootstrap 2>/dev/null | awk '/^Driver:/ {print $2}')
+if [ "$BUILDER_DRIVER" = "docker" ]; then
+  print_error "当前 builder 使用 docker driver，不支持多平台构建"
+  print_error "请运行: docker buildx create --name snell-builder --driver docker-container --use"
+  exit 1
+fi
 
 # 准备标签列表
-TAGS=("$VERSION")
-
-# 添加大版本标签
-TAGS+=("$MAJOR_VERSION")
+TAGS=("$VERSION" "$MAJOR_VERSION")
 print_info "添加大版本标签: $MAJOR_VERSION"
 
-# 根据发布通道添加标签
 if [ "$CHANNEL" = "stable" ]; then
   TAGS+=("latest")
   print_info "正式版发布，添加 latest 标签"
@@ -113,25 +111,26 @@ else
   print_info "测试版发布，跳过 latest 标签"
 fi
 
-# 为所有标签创建 Docker tag
-print_info "正在创建标签..."
+TAG_ARGS=()
 for tag in "${TAGS[@]}"; do
-  if [ "$tag" != "$VERSION" ]; then # 跳过已经在构建时创建的版本标签
-    docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${tag}
-    print_success "创建标签: ${IMAGE_NAME}:${tag}"
-  fi
+  TAG_ARGS+=(--tag "${IMAGE_NAME}:${tag}")
 done
 
-# 推送所有标签
-print_info "正在推送镜像..."
-for tag in "${TAGS[@]}"; do
-  print_info "推送标签: ${IMAGE_NAME}:${tag}"
-  docker push ${IMAGE_NAME}:${tag}
-  print_success "推送完成: ${IMAGE_NAME}:${tag}"
-done
-
-print_success "所有操作完成！"
-print_info "已推送的标签:"
+print_info "正在构建并推送多架构镜像..."
+print_info "将推送的标签:"
 for tag in "${TAGS[@]}"; do
   echo "  - ${IMAGE_NAME}:${tag}"
+done
+
+docker buildx build \
+  --platform "${PLATFORMS}" \
+  --build-arg VERSION="${VERSION}" \
+  "${TAG_ARGS[@]}" \
+  --push \
+  .
+
+print_success "所有操作完成！"
+print_info "已推送的多架构标签:"
+for tag in "${TAGS[@]}"; do
+  echo "  - ${IMAGE_NAME}:${tag} (${PLATFORMS})"
 done

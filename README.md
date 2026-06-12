@@ -5,6 +5,8 @@
 
 Docker image for [snell-server](https://kb.nssurge.com/surge-knowledge-base/release-notes/snell)
 
+Multi-arch images are available for `linux/amd64` and `linux/arm64`. Docker pulls the matching architecture automatically.
+
 ## Usage
 
 ### Available versions
@@ -32,3 +34,24 @@ docker run -e PSK=<your_psk_here> --name snell --restart unless-stopped --networ
 ### Run with [shadow-tls](https://github.com/ihciah/shadow-tls)
 
 Use `docker-compose.yml` to run snell-server with shadow-tls. Please change the environment variables in `docker-compose.yml` to your own.
+
+## Build
+
+Multi-arch builds require Docker Buildx and QEMU for cross-platform emulation:
+
+```bash
+docker buildx create --name snell-builder --driver docker-container --use
+docker run --privileged --rm tonistiigi/binfmt --install all
+docker login
+./build.sh 5.0.1
+```
+
+## Publish via GitHub Actions
+
+1. Add repository secrets:
+   - `DOCKERHUB_USERNAME`
+   - `DOCKERHUB_TOKEN` (Docker Hub access token)
+2. Open **Actions** → **Publish** → **Run workflow**
+3. Enter the Snell server version and choose `stable` or `beta`
+
+The workflow builds and pushes `linux/amd64` and `linux/arm64` images to Docker Hub.

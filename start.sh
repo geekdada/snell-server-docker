@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/sh
 
 set -e
 
@@ -10,31 +10,30 @@ CONF="/etc/snell-server.conf"
 run_bin() {
     echo "Running snell-server with config:"
     echo ""
-    cat ${CONF}
+    cat "${CONF}"
 
-    ${BIN} --version
-    ${BIN} -c ${CONF}
+    "${BIN}" --version
+    exec "${BIN}" -c "${CONF}"
 }
 
-if [ -f ${CONF} ]; then
+if [ -f "${CONF}" ]; then
     echo "Found existing config, rm it."
-    rm ${CONF}
+    rm "${CONF}"
 fi
 
-if [ -z ${PSK} ]; then
+if [ -z "${PSK:-}" ]; then
     PSK=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
     echo "Using generated PSK: ${PSK}"
 else
     echo "Using predefined PSK: ${PSK}"
 fi
-
-if [ -z ${PORT} ]; then
+if [ -z "${PORT:-}" ]; then
     PORT=9102
 fi
 
 echo "Generating new config..."
-echo "[snell-server]" >>${CONF}
-echo "listen = :::${PORT}" >>${CONF}
-echo "psk = ${PSK}" >>${CONF}
+echo "[snell-server]" >>"${CONF}"
+echo "listen = :::${PORT}" >>"${CONF}"
+echo "psk = ${PSK}" >>"${CONF}"
 
 run_bin
